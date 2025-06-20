@@ -39,11 +39,24 @@ def save_page_as_pdf(url, output_pdf):
     edge_options.add_argument("referer=")
     edge_options.add_argument("accept-language=en-US,en;q=0.9")
 
-    # 检查驱动文件
-    driver_path = "msedgedriver.exe"
-    if not os.path.exists(driver_path):
-        print(f"错误: 找不到Edge驱动文件 {driver_path}")
-        print("请下载msedgedriver.exe并放在脚本同目录下")
+    # 检查多个可能的驱动文件位置
+    possible_paths = [
+        "msedgedriver.exe",
+        "drivers/msedgedriver.exe",
+        os.path.join(os.path.dirname(__file__), "msedgedriver.exe")
+    ]
+    
+    driver_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            driver_path = path
+            break
+    
+    if not driver_path:
+        print("❌ 错误: 找不到Edge驱动文件")
+        print("请下载msedgedriver.exe并放在以下任一位置:")
+        for path in possible_paths:
+            print(f"  - {os.path.abspath(path)}")
         print("下载地址: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/")
         return
 
