@@ -86,10 +86,8 @@ def save_page_as_pdf(url, output_pdf):
             elements = driver.find_elements(By.XPATH, "//*[name()='text' and @text-anchor='middle']")
             if elements:
                 title = elements[0].text.strip()
-                folder_name = title if title else "Unknown"
                 # 清理文件名中的非法字符
-                folder_name = ''.join(c if c not in '/\\:*?"<>|' else '_' for c in folder_name)
-                os.makedirs(folder_name, exist_ok=True)
+                clean_title = ''.join(c if c not in '/\\:*?"<>|' else '_' for c in title) if title else "Unknown"
 
                 print_options = {
                     'paperWidth': 8.27,
@@ -104,7 +102,8 @@ def save_page_as_pdf(url, output_pdf):
 
                 print(f"正在生成PDF: {output_pdf}")
                 pdf_data = driver.execute_cdp_cmd("Page.printToPDF", print_options)
-                output_pdf_path = os.path.join(folder_name, f"{title}-{output_pdf}.pdf")
+                # 直接保存在当前目录，文件名格式：标题-类型.pdf
+                output_pdf_path = f"{clean_title}-{output_pdf}.pdf"
                 with open(output_pdf_path, 'wb') as f:
                     f.write(base64.b64decode(pdf_data['data']))
                 print(f"✅ PDF保存成功: {output_pdf_path}")
