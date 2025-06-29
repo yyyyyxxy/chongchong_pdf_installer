@@ -7,8 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.edge.options import Options
-from selenium.webdriver.edge.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 
 
 def get_html_and_extract(link):
@@ -38,28 +38,27 @@ def get_html_and_extract(link):
 
 def save_page_as_pdf(url, output_pdf):
     """
-    Saves a web page as a PDF file using Selenium and Edge.
+    Saves a web page as a PDF file using Selenium and Chrome.
 
     Args:
         url (str): The URL of the web page to save.
         output_pdf (str): The name of the output PDF file.
     """
-    edge_options = Options()
-    edge_options.use_chromium = True
-    edge_options.add_argument("--headless")
-    edge_options.add_argument("--disable-gpu")
-    edge_options.add_argument("--no-sandbox")
-    edge_options.add_argument("--disable-dev-shm-usage")
-    edge_options.add_argument(
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36"
     )
-    edge_options.add_argument("referer=")
-    edge_options.add_argument("accept-language=en-US,en;q=0.9")
+    chrome_options.add_argument("referer=")
+    chrome_options.add_argument("accept-language=en-US,en;q=0.9")
 
     possible_paths = [
-        "msedgedriver.exe",
-        "drivers/msedgedriver.exe",
-        os.path.join(os.path.dirname(__file__), "msedgedriver.exe"),
+        "chromedriver.exe",
+        "drivers/chromedriver.exe",
+        os.path.join(os.path.dirname(__file__), "chromedriver.exe"),
     ]
     driver_path = None
     for path in possible_paths:
@@ -68,17 +67,17 @@ def save_page_as_pdf(url, output_pdf):
             break
 
     if not driver_path:
-        print("❌ 错误: 找不到Edge驱动文件")
-        print("请下载msedgedriver.exe并放在以下任一位置:")
+        print("[Error] 错误: 找不到Chrome驱动文件")
+        print("请下载chromedriver.exe并放在以下任一位置:")
         for path in possible_paths:
             print(f" - {os.path.abspath(path)}")
         print(
-            "下载地址: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/"
+            "下载地址: https://googlechromelabs.github.io/chrome-for-testing/"
         )
         return
 
     service = Service(driver_path)
-    driver = webdriver.Edge(service=service, options=edge_options)
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     try:
         print("正在加载乐谱页面...")
@@ -124,11 +123,11 @@ def save_page_as_pdf(url, output_pdf):
                 output_pdf_path = f"{clean_title}-{output_pdf}.pdf"
                 with open(output_pdf_path, 'wb') as f:
                     f.write(base64.b64decode(pdf_data['data']))
-                print(f"✅ PDF保存成功: {output_pdf_path}")
+                print(f"[Success] PDF保存成功: {output_pdf_path}")
                 return
             else:
-                print(f"❌ 第{attempt + 1}次尝试失败，正在重试...")
-        print("❌ 无法加载乐谱内容，请检查链接是否正确")
+                print(f"[Failed] 第{attempt + 1}次尝试失败，正在重试...")
+        print("[Error] 无法加载乐谱内容，请检查链接是否正确")
     except Exception as e:
         print(f"处理过程中出错: {e}")
     finally:
@@ -140,10 +139,10 @@ def main():
     Main function to run the piano score downloader.
     """
     print("=" * 60)
-    print("虫虫钢琴乐谱下载器")
+    print("虫虫钢琴乐谱下载器 (Chrome版)")
     print("=" * 60)
     print("使用说明:")
-    print("1. 确保已安装 msedgedriver.exe 在当前目录")
+    print("1. 确保已安装 chromedriver.exe 在当前目录")
     print("2. 输入虫虫钢琴网站的乐谱链接")
     print("3. 程序会自动下载五线谱和简谱版本的PDF")
     print("=" * 60)
@@ -159,7 +158,7 @@ def main():
             with open(args.file, 'r', encoding='utf-8') as f:
                 links = [line.strip() for line in f if line.strip()]
         except FileNotFoundError:
-            print(f"❌ 文件不存在: {args.file}")
+            print(f"[Error] 文件不存在: {args.file}")
             return
     else:
         print("请输入要处理的乐谱链接，每行一个，输入空行结束：")
@@ -170,7 +169,7 @@ def main():
                 break
             links.append(link)
     if not links:
-        print("❌ 没有输入任何链接")
+        print("[Error] 没有输入任何链接")
         return
     base_url = "https://www.gangqinpu.com"
     total = len(links)
@@ -185,8 +184,8 @@ def main():
             simplified_url = full_url.replace('jianpuMode=0', 'jianpuMode=1')
             save_page_as_pdf(simplified_url, "简谱")
         else:
-            print(f"❌ 无法处理链接: {link}")
-    print(f"\n🎉 处理完成! 共处理了 {total} 个链接")
+            print(f"[Error] 无法处理链接: {link}")
+    print(f"\n[Done] 处理完成! 共处理了 {total} 个链接")
 
 
 if __name__ == "__main__":
